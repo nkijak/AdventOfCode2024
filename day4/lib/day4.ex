@@ -30,4 +30,28 @@ defmodule Day4 do
     end
   end
 
+  def build(this, previous_tree) do
+    %Tree{value: this, right: previous_tree}
+  end
+
+  def parse(line) do
+    line
+    |> String.split("")
+    |> Enum.filter(& &1 != "")
+    |> Enum.reverse() # ["C","B", "A"]
+    |> Enum.chunk_every(2)
+  end
+
+  @spec link(any(), any()) :: list()
+  def link(lineA, lineB) do
+    lineA
+    |> Enum.with_index
+    |> Enum.map(fn {el, idx} ->
+      right = if idx+1 >= length(lineA), do: nil, else: Enum.at(lineA, idx+1)
+      corner = if idx+1 >= length(lineB), do: nil, else: Enum.at(lineB, idx+1)
+      down = Enum.at(lineB, idx)
+      %{el|right: right, down: down, corner: corner}
+    end)
+  end
+
 end

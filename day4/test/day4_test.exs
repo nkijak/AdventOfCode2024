@@ -50,4 +50,25 @@ defmodule Day4Test do
       corner: %Tree{value: "d"}
     }, ["a", "b", "c"], :right) == 1
   end
+
+  test "parse makes linked list" do
+    [a,b,c] = Day4.parse("ABC")
+    assert a.right == b
+    assert b.right == c
+    assert c.right == nil
+  end
+
+  test "link attaches surroundings" do
+    a = %Tree{value: 1}
+    b = %Tree{value: 2}
+    c = %Tree{value: 3}
+    d = %Tree{value: 4}
+    [a1,b1] = Day4.link([a,b], [c,d])
+    assert a1.right == b1
+    assert a1.corner == d
+    assert a1.down == c
+    assert b1.right == nil
+    assert b1.corner == nil
+    assert b1.down == d
+  end
 end
