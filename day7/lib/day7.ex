@@ -24,7 +24,7 @@ defmodule Day7 do
         {i, _} = Integer.parse("#{left}#{right}")
         i
     end
-    IO.puts("leaf calulation #{left} #{op} #{right} == #{answer}?")
+    #IO.puts("leaf calulation #{left} #{op} #{right} >> #{value} == #{answer}?")
     value == answer
   end
 
@@ -36,18 +36,22 @@ defmodule Day7 do
   end
 
   def continue(answer, acc, [right|rest], ops) do
-    ops |> Enum.map(fn op ->
-      value = case op do
-        :multiply -> acc * right
-        :add -> acc + right
-        :concat ->
-          {i, _} = Integer.parse("#{acc}#{right}")
-          i
+    ops |> Enum.reduce(false, fn op, any ->
+      if any do
+        #IO.puts("#{answer} Found already, short circuit")
+        true
+      else
+        value = case op do
+          :multiply -> acc * right
+          :add -> acc + right
+          :concat ->
+            {i, _} = Integer.parse("#{acc}#{right}")
+            i
+        end
+        #IO.puts("continuing to #{answer} with #{acc} #{op} #{right} = #{value}")
+        continue(answer, value, rest, ops)
       end
-      #IO.puts("continuing to #{answer} with #{acc} #{op} #{right} = #{value}")
-      continue(answer, value, rest, ops)
     end)
-    |> Enum.any?
   end
 
   def start(d, ops) do
@@ -82,7 +86,7 @@ defmodule Day7 do
     content
       |> String.split("\n")
       |> Enum.filter(fn l -> l != "" end)
-      #|> tap(& &1 |> part1 |> IO.puts)
+      |> tap(& &1 |> part1 |> IO.puts)
       |> part2 |> IO.puts
   end
 end
