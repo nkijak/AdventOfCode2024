@@ -1,20 +1,4 @@
 defmodule Day9 do
-  @moduledoc """
-  Documentation for `Day9`.
-  """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Day9.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 
   @doc """
   ## Example
@@ -24,7 +8,10 @@ defmodule Day9 do
   def checksum(blocks) do
     blocks
       |> Enum.with_index
-      |> Enum.map(fn {el, i} -> el * i end)
+      |> Enum.map(fn {el, i} ->
+        (if el, do: el, else: 0) * i
+      end)
+      |> tap(& IO.inspect(&1))
       |> Enum.sum
   end
 
@@ -49,6 +36,7 @@ defmodule Day9 do
             Enum.concat(b,f)
       end
     end)
+    #|> tap(& &1 |> Enum.map(fn e -> if e == nil, do: ".", else: "#{e}" end) |> Enum.join |> IO.puts)
   end
 
 
@@ -61,29 +49,73 @@ defmodule Day9 do
   def compact(expanded, free_start \\ 0, block_start \\ -1)
 
   def compact(expanded, free_start, block_start) when free_start < block_start or block_start == -1 do
+    #IO.puts("--- compact for #{free_start} from #{block_start}")
+    #expanded |> Enum.map(fn e -> if e == nil, do: ".", else: "#{e}" end) |> Enum.join |> IO.puts
     len = length(expanded)
     block_start = if block_start < 0, do: len - 1, else: block_start
     free = expanded
       |> Enum.slice(free_start, len)
-      |> tap(& IO.inspect(&1))
+      #|> tap(& IO.inspect(&1))
       |> Enum.find_index(& &1 == nil)
     last_block = expanded
       |> Enum.reverse
       |> Enum.slice(len - block_start - 1, len)
-      |> tap(& IO.inspect(&1))
+      #|> tap(& IO.inspect(&1))
       |> Enum.find_index(& &1 != nil)
-    IO.puts("uncorrected Free=#{free} last_block=#{last_block}")
+    #IO.puts("uncorrected Free=#{free} last_block=#{last_block}")
     free = free_start + free
     last_block = block_start - last_block
     value = Enum.at(expanded, last_block)
-    IO.puts("Free=#{free} last_block=#{last_block} len=#{length(expanded)} value=#{value}")
-    compact(expanded
-      |> List.replace_at(free, value)
-      |> List.replace_at(last_block, nil),
-      free+1, last_block-1)
+    IO.puts("moving #{value} from #{last_block} to #{free}")
+    if last_block < free do
+      expanded
+    else
+      compact(expanded
+        |> List.replace_at(free, value)
+        |> List.replace_at(last_block, nil),
+        free, last_block-1)
+    end
   end
 
-  def compact(expanded, free_start , block_start) when free_start >= block_start do
+  def compact(expanded, free_start , block_start) when free_start >= block_start and block_start > 0 do
+    IO.puts("End of search free=#{free_start} block=#{block_start}")
+    expanded |> Enum.map(fn e -> if e == nil, do: ".", else: "#{e}" end) |> Enum.join |> IO.puts
     expanded
+  end
+
+  @doc """
+  ## Examples
+      iex> Day9.parse("1234")
+      [1,2,3,4]
+  """
+  def parse(line) do
+    line |> String.codepoints |> Enum.map(fn c ->
+      case Integer.parse(c) do
+        {i, _}  -> i
+        :error ->
+          exit("Could not parse >#{c}<")
+      end
+    end)
+  end
+
+  @doc """
+  ## Example
+      iex> Day9.part1("2333133121414131402")
+      1928
+  """
+  def part1(line) do
+    line
+    |> String.trim
+    |> parse
+    |> expand_and_id
+    |> compact
+    |> checksum
+  end
+
+  def main(_args) do
+    {:ok, content} = File.read("input.txt")
+    content
+      |> tap(& &1 |> part1 |> IO.puts)
+      #|> part2 |> IO.puts
   end
 end
