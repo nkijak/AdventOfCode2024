@@ -14,6 +14,7 @@ defmodule Day11.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
+      mod: {Day11, []},
       extra_applications: [:logger, :tqdm]
     ]
   end
