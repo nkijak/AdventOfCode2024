@@ -51,31 +51,20 @@ defmodule Day12 do
   end
 
   def perimeter(point_set, visited, x, y) do
-    IO.inspect(visited)
-    cond do
-      MapSet.member?(visited, {x, y}) ->
-        IO.puts("#{x}, #{y} visited")
-        0
-      MapSet.member?(point_set, {x, y}) ->
-        init = {0,MapSet.put(visited, {x, y})}
-        {sum, _} = [
-          {x+1, y},
-          {x, y+1},
-          {x-1, y},
-          {x, y-1},
-        ]
-        |> Enum.reduce(init, fn el, acc ->
-          {ex,ey} = el
-          {val, vis} = acc
-          p = perimeter(point_set, vis, ex, ey)
-          v = MapSet.put(vis, el)
-          {val+p, v}
-        end)
-
-        sum + fences(point_set, x, y)
-      true ->
-        IO.puts("#{x}, #{y} not a member")
-        0
-    end
+    visited = MapSet.put(visited, {x, y})
+    [
+      {x+1, y},
+      {x, y+1},
+      {x-1, y},
+      {x, y-1},
+    ]
+    |> Enum.reduce({fences(point_set, x, y),visited}, fn {ex, ey}, {s, v} ->
+      {val, vis} = if MapSet.member?(point_set, {ex, ey}) and not MapSet.member?(v, {ex, ey}) do
+        perimeter(point_set, v, ex, ey)
+      else
+        {0, visited}
+      end
+      {val+s, vis}
+    end)
   end
 end

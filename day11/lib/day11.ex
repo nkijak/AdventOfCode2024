@@ -18,42 +18,44 @@ defmodule Day11 do
 
   def apply_rules(head) do
     headstr = "#{head}"
-    if rem(String.length(headstr), 2) == 0 do
-      {l,r} = String.split_at(headstr, trunc(String.length(headstr)/2))
-      Enum.map([l,r], fn x ->
-        {i,_} = Integer.parse(x)
-        i
-      end)
-    else
-      [head*2024]
+    splitable = rem(String.length(headstr), 2) == 0
+    case head do
+      0 -> [1]
+      _ when splitable ->
+        {l,r} = String.split_at(headstr, trunc(String.length(headstr)/2))
+        Enum.map([l,r], fn x ->
+          {i,_} = Integer.parse(x)
+          i
+        end)
+      _ ->
+        [head*2024]
     end
   end
 
+
   def rules([]) do
+    IO.puts("END")
     []
   end
 
-  def rules([0|[]]) do
-    #IO.puts("lastly, got a 0")
-    []
-  end
-  def rules([0|tail]) do
-    #IO.puts("got a 0")
-    rules(tail)
-  end
+  #def rules([0|[]]) do
+  #  #IO.puts("lastly, got a 0")
+  #  [1]
+  #end
+  #def rules([0|tail]) do
+  #  #IO.puts("got a 0")
+  #  [1|rules(tail)]
+  #end
   def rules([head|[]]) do
     #IO.puts("last element, #{head}")
-    apply_rules(head)
+    RuleCache.get(head)
   end
   def rules([head|tail]) do
     #IO.puts("applying to #{head}")
-    apply_rules(head) ++ rules(tail)
+    rest = rules(tail)
+    RuleCache.get(head) ++ rest
   end
 
-  def precompute(depth) do
-    0..(depth - 1)
-    |> Enum.map(& rules([0]))
-  end
 
 
   @doc """
@@ -76,7 +78,7 @@ defmodule Day11 do
     initial = line |> parse
     0..count
     |> Tqdm.tqdm()
-    |> Enum.reduce(initial, fn i, acc ->
+    |> Enum.reduce(initial, fn _, acc ->
       parts = trunc(length(acc) / chunk_size)
       IO.puts("parts #{parts}")
       0..parts
@@ -91,12 +93,58 @@ defmodule Day11 do
     |> length
   end
 
+  def rule_app(next, len) do
+    #IO.puts("#{inspect(self())} start next->#{inspect(next)} len=#{len}")
+    receive do
+      {:rules, values} ->
+        #IO.puts("#{inspect(self())} received rules #{inspect(values)}")
+        nlength = len + length(values)
+        Enum.each(values, fn r ->
+          #IO.puts("#{inspect(self())} processing #{inspect(r)}")
+          send(next,{:rules, rules([r])})
+        end)
+        #send(next, {:rules, rules(values)})
+        if nlength != len do
+          #IO.puts("looping #{inspect(self())}->#{inspect(next)}")
+          rule_app(next, nlength)
+        end
+        #IO.puts("#{inspect(self())} exiting len=#{len} nlen=#{nlength}")
+      :done ->
+        send(next, :done)
+        IO.puts("#{inspect(self())} DONE")
+    end
+  end
+
+  def process_part(count) do
+    line = "890 0 1 935698 68001 3441397 7221 27"
+    process_part(line, count)
+  end
+
+  def count_up(curr_len \\ 0) do
+    receive do
+      {:rules, vals} -> count_up(curr_len + length(vals))
+      :done -> IO.puts("TOTAL COUNT: #{curr_len}")
+    end
+  end
+
+  @spec process_part(integer()) :: any()
+  def process_part(line, count) do
+    initial = line |> parse
+    last = 1..count
+      |> Enum.reduce(self(),
+        fn _, acc ->
+          spawn_link(fn -> rule_app(acc, 0) end)
+        end)
+    send(last, {:rules, initial})
+    send(last, :done)
+    count_up()
+  end
+
   @doc """
       iex> Day11.part("125, 17", 24)
       55312
   """
   def part(line, count) do
-    chunk_size = 400
     initial = line |> parse
     0..count
     |> Tqdm.tqdm()
@@ -107,8 +155,11 @@ defmodule Day11 do
   end
 
   def start(_type, _args) do
+    IO.puts("self #{inspect(self())}")
+    {:ok, _} = RuleCache.start()
     "890 0 1 935698 68001 3441397 7221 27"
-      |> tap(& &1 |> part(24) |> IO.puts)
-      |> part(74) |> IO.puts
+    |> process_part(75)
+      # |> tap(& &1 |> part(24) |> IO.puts)
+      # |> part(74) |> IO.puts
   end
 end

@@ -15,7 +15,7 @@ defmodule Day11.MixProject do
   def application do
     [
       mod: {Day11, []},
-      extra_applications: [:logger, :tqdm]
+      extra_applications: [:logger, :tqdm, :observer]
     ]
   end
 

@@ -36,4 +36,9 @@ defmodule Day13 do
     |> Enum.map(& Day13.parse_machine/1)
   end
 
+  def solve(%{a: {ax,ay}, b: {bx,by}, prize: {px, py}}) do
+    b = (py * by)/(ax * 2) - px/2 * bx/2
+    a = (px - b*bx)/ax
+    {a,b}
+  end
 end
