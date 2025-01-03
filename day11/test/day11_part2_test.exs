@@ -39,7 +39,6 @@ defmodule Day11Part2Test do
     assert Day11.Part2.part("125 17", 6) == 22
   end
 
-  @tag :wip
   test "smaller After 7 blinks" do
     # 40           48              40        48
     # 4      0     4       8       4      0  4       8
@@ -54,6 +53,13 @@ defmodule Day11Part2Test do
 
   test "After 25 blinks" do
     assert Day11.Part2.part("125 17", 25) == 55312
+  end
+
+  test "part1" do
+    assert Day11.Part2.part("890 0 1 935698 68001 3441397 7221 27", 25) == 194782
+  end
+  test "part2" do
+    assert Day11.Part2.part("890 0 1 935698 68001 3441397 7221 27", 75) == 233007586663131
   end
 
 end
