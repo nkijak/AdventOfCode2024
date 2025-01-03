@@ -18,10 +18,12 @@ defmodule Day11.Part2 do
   def process2(previous_counts) do
     Map.keys(previous_counts)
     |> Enum.reduce(%{}, fn prev_key, outer ->
+      #IO.puts("----- #{prev_key} -----")
       apply_rules(prev_key)
       |> Enum.reduce(outer, fn el, acc ->
-        #IO.puts("     :#{el} #{inspect(acc)}")
-        Map.update(acc, el, Map.get(previous_counts, prev_key, 0), &(&1 + 1))
+        parent_count = Map.get(previous_counts, prev_key, 0)
+        #IO.puts("     :#{inspect(acc)} add #{el} (#{parent_count})")
+        Map.update(acc, el, parent_count, &(&1 + parent_count))
       end)
       #|> tap(&(IO.puts("  end #{prev_key} #{inspect(&1)}")))
     end)
@@ -45,10 +47,10 @@ defmodule Day11.Part2 do
     1..count
     |> Enum.reduce(initial, fn i, counts ->
       next = process2(counts)
-      IO.puts("blink #{i} #{inspect(Map.keys(next))} #{inspect(next)}")
+      #IO.puts("blink #{i} #{inspect(Map.keys(next))} #{inspect(next)}")
       next
     end)
-    |> tap(& IO.inspect(&1))
+    #|> tap(& IO.inspect(&1))
     |> Map.values
     |> Enum.sum
   end
